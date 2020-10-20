@@ -2,17 +2,20 @@
 
 #define UINT32_MAX 0xFFFFFFFF
 #define SERIAL_DEBUG 0
+#define DEBUG_PIN 0
 
 const int greenPin =  3;
 const int micPin = 4;
 const int yellowPin = 5;
 const int redPin = 6;
+#if DEBUG_PIN
 const int debugPin = 13;
+#endif
 
 const uint32_t NOISE_COST = 10;
 const uint32_t RED_THRESHOLD = 200000;
 const uint32_t YELLOW_THRESHOLD = 100000;
-const uint32_t GREEN_THRESHOLD = 1;
+const uint32_t GREEN_THRESHOLD = 1; 
 
 enum LED_state { OFF, GREEN, YELLOW, RED };
 
@@ -24,8 +27,9 @@ void setup() {
   pinMode(yellowPin, OUTPUT);
   pinMode(redPin, OUTPUT);
   pinMode(micPin, INPUT);
+#if DEBUG_PIN
   pinMode(debugPin, OUTPUT);
-
+#endif
 #if SERIAL_DEBUG
   Serial.begin(9600);
 #endif
@@ -38,7 +42,9 @@ void loop() {
       currentCost += NOISE_COST;
     }
 
+#if DEBUG_PIN
     digitalWrite(debugPin, HIGH);
+#endif
   } else {
     if (currentCost) {
       currentCost--;
@@ -49,7 +55,9 @@ void loop() {
       }
 #endif
     }
+#if DEBUG_PIN
     digitalWrite(debugPin, LOW);
+#endif
   }
 
   switch (state) {

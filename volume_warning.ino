@@ -14,7 +14,9 @@ const uint32_t RED_THRESHOLD = 200000;
 const uint32_t YELLOW_THRESHOLD = 100000;
 const uint32_t GREEN_THRESHOLD = 1;
 
+enum LED_state { OFF, GREEN, YELLOW, RED };
 
+LED_state state = OFF;
 uint32_t currentCost = 0;
 
 void setup() {
@@ -29,9 +31,7 @@ void setup() {
 #endif
 }
 
-void loop() {
-  uint32_t oldCost = currentCost;
-  
+void loop() {  
   if (digitalRead(micPin) == HIGH) {
     // Prevent overflow
     if (currentCost + NOISE_COST <= UINT32_MAX) {
@@ -52,21 +52,51 @@ void loop() {
     digitalWrite(debugPin, LOW);
   }
 
-  if (currentCost >= RED_THRESHOLD) {
-    digitalWrite(redPin, HIGH);
-    digitalWrite(yellowPin, LOW);
-    digitalWrite(greenPin, LOW);
-  } else if (currentCost >= YELLOW_THRESHOLD) {
-    digitalWrite(redPin, LOW);
-    digitalWrite(yellowPin, HIGH);
-    digitalWrite(greenPin, LOW);    
-  } else if (currentCost >= GREEN_THRESHOLD) {
-    digitalWrite(redPin, LOW);
-    digitalWrite(yellowPin, LOW);
-    digitalWrite(greenPin, HIGH); 
-  } else {
-    digitalWrite(redPin, LOW);
-    digitalWrite(yellowPin, LOW);
-    digitalWrite(greenPin, LOW);     
+  switch (state) {
+    case OFF:
+      if (currentCost >= GREEN_THRESHOLD) {
+        state = GREEN;
+        digitalWrite(redPin, LOW);
+        digitalWrite(yellowPin, LOW);
+        digitalWrite(greenPin, HIGH);
+      }
+      break;
+
+    case GREEN:
+      if (currentCost >= YELLOW_THRESHOLD) {
+        state = YELLOW;
+        digitalWrite(redPin, LOW);
+        digitalWrite(yellowPin, HIGH);
+        digitalWrite(greenPin, LOW);         
+      } else if (currentCost < GREEN_THRESHOLD) {
+        state = OFF;
+        digitalWrite(redPin, LOW);
+        digitalWrite(yellowPin, LOW);
+        digitalWrite(greenPin, LOW);             
+      }
+      break;
+
+    case YELLOW:
+      if (currentCost >= RED_THRESHOLD) {
+        state = RED;
+        digitalWrite(redPin, HIGH);
+        digitalWrite(yellowPin, LOW);
+        digitalWrite(greenPin, LOW);            
+      } else if (currentCost < YELLOW_THRESHOLD) {
+        state = GREEN;
+        digitalWrite(redPin, LOW);
+        digitalWrite(yellowPin, LOW);
+        digitalWrite(greenPin, HIGH);        
+      }
+      break;
+
+    case RED:
+      if (currentCost < RED_THRESHOLD) {
+        state = YELLOW;
+        digitalWrite(redPin, LOW);
+        digitalWrite(yellowPin, HIGH);
+        digitalWrite(greenPin, LOW);  
+      }
+      break;
   }
 }
